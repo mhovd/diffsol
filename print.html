@@ -1,0 +1,1283 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>DiffSol</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="specifying_the_problem.html"><strong aria-hidden="true">1.</strong> Specifying the problem</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ode_equations.html"><strong aria-hidden="true">1.1.</strong> ODE equations</a></li><li class="chapter-item expanded "><a href="mass_matrix.html"><strong aria-hidden="true">1.2.</strong> Mass matrix</a></li><li class="chapter-item expanded "><a href="root_finding.html"><strong aria-hidden="true">1.3.</strong> Root finding</a></li><li class="chapter-item expanded "><a href="forward_sensitivity.html"><strong aria-hidden="true">1.4.</strong> Forward Sensitivity</a></li><li class="chapter-item expanded "><a href="custom_problem_structs.html"><strong aria-hidden="true">1.5.</strong> Custom Problem Structs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="non_linear_functions.html"><strong aria-hidden="true">1.5.1.</strong> Non-linear functions</a></li><li class="chapter-item expanded "><a href="constant_functions.html"><strong aria-hidden="true">1.5.2.</strong> Constant functions</a></li><li class="chapter-item expanded "><a href="linear_functions.html"><strong aria-hidden="true">1.5.3.</strong> Linear functions</a></li><li class="chapter-item expanded "><a href="putting_it_all_together.html"><strong aria-hidden="true">1.5.4.</strong> Putting it all together</a></li></ol></li><li class="chapter-item expanded "><a href="diffsl.html"><strong aria-hidden="true">1.6.</strong> DiffSL</a></li><li class="chapter-item expanded "><a href="sparse_problems.html"><strong aria-hidden="true">1.7.</strong> Sparse problems</a></li></ol></li><li class="chapter-item expanded "><a href="choosing_a_solver.html"><strong aria-hidden="true">2.</strong> Choosing a solver</a></li><li class="chapter-item expanded "><a href="initialisation.html"><strong aria-hidden="true">3.</strong> Initialisation</a></li><li class="chapter-item expanded "><a href="solving_the_problem.html"><strong aria-hidden="true">4.</strong> Solving the problem</a></li><li class="chapter-item expanded "><a href="benchmarks.html"><strong aria-hidden="true">5.</strong> Benchmarks</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">DiffSol</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="specifying-the-problem"><a class="header" href="#specifying-the-problem">Specifying the problem</a></h1>
+<p>Most of the DiffSol user-facing API revolves around specifying the problem you want to solve, thus a large part of this book will be dedicated to explaining how to specify a problem.</p>
+<h2 id="ode-equations"><a class="header" href="#ode-equations">ODE equations</a></h2>
+<p>The class of ODE equations that DiffSol can solve are of the form</p>
+<p>\[M(t) \frac{dy}{dt} = f(t, y, p),\]
+\[y(t_0) = y_0(t_0, p),\]
+\[z(t) = g(t, y, p),\]</p>
+<p>where:</p>
+<ul>
+<li>\(f(t, y, p)\) is the right-hand side of the ODE,</li>
+<li>\(y\) is the state vector,</li>
+<li>\(p\) are the parameters,</li>
+<li>\(t\) is the time.</li>
+<li>\(y_0(t_0, p)\) is the initial state vector at time \(t_0\).</li>
+<li>\(M(t)\) is the mass matrix (this is optional, and is implicitly the identity matrix if not specified),</li>
+<li>\(g(t, y, p)\) is an output function that can be used to calculate additional outputs from the state vector (this is optional, and is implicitly \(g(t, y, p) = y\) if not specified).</li>
+</ul>
+<p>The user can also optionally specify a root function \(r(t, y, p)\) that can be used to find the time at which a root occurs.</p>
+<h2 id="diffsol-problem-apis"><a class="header" href="#diffsol-problem-apis">DiffSol problem APIs</a></h2>
+<p>DiffSol has three main APIs for specifying problems:</p>
+<ul>
+<li>The <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> struct, where the user can specify the functions above using Rust closures.
+This is the easiest API to use from Rust, and is the recommended API for most users.</li>
+<li>The <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/equations/trait.OdeEquations.html"><code>OdeEquations</code></a> trait
+where the user can implement the functions above on their own structs.
+This API is more flexible than the <code>OdeBuilder</code> API, but is more complex to use. It is useful if you have custom data structures and code that you want to use to evaluate
+your functions that does not fit within the <code>OdeBuilder</code> API.</li>
+<li>The <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/diffsl/struct.DiffSlContext.html"><code>DiffSlContext</code></a> struct, where the user can specify the functions above using the <a href="https://martinjrobins.github.io/diffsl/">DiffSl</a>
+Domain Specific Language (DSL). This API requires a local LLVM installation, and is behind a feature flag, but has the best API if you want to use DiffSL from a higher-level language like Python or R
+while still having the performance of Rust.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ode-equations-1"><a class="header" href="#ode-equations-1">ODE equations</a></h1>
+<p>The simplest way to create a new ode problem in Rust is to use the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> struct.
+You can set the initial time, initial step size, relative tolerance, absolute tolerance, and parameters, or leave them at their default values.
+Then, call one of the <code>build_*</code> functions to create a new problem, for example the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html#method.build_ode"><code>build_ode</code></a>
+function can be used to create an ODE problem of the form \(dy/dt = f(t, y, p)\), where \(y\) is the state vector, \(t\) is the time, and \(p\) are the parameters.</p>
+<p>Below is an example of how to create a new ODE problem using the <code>OdeBuilder</code> struct.
+The specific problem we will solve is the logistic equation</p>
+<p>\[\frac{dy}{dt} = r y (1 - y/K),\]</p>
+<p>where \(r\) is the growth rate and \(K\) is the carrying capacity.
+To specify the problem, we need to provide the \(dy/dt\) function \(f(y, p, t)\),
+and the jacobian of \(f\) multiplied by a vector \(v\) function, which we will call \(f'(y, p, t, v)\). That is</p>
+<p>\[f(y, p, t) = r y (1 - y/K),\]
+\[f'(y, p, t, v) = rv (1 - 2y/K),\]</p>
+<p>and the initial state</p>
+<p>\[y_0(p, t) = 0.1\]</p>
+<p>This can be done using the following code:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::OdeBuilder;
+use nalgebra::DVector;
+type M = nalgebra::DMatrix&lt;f64&gt;;
+
+let problem = OdeBuilder::new()
+    .t0(0.0)
+    .rtol(1e-6)
+    .atol([1e-6])
+    .p(vec![1.0, 10.0])
+    .build_ode::&lt;M, _, _, _&gt;(
+       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+       |_p, _t| DVector::from_element(1, 0.1),
+    ).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p>Each <code>build_*</code> method requires the user to specify what matrix type they wish to use to define and solve the model (the other types are inferred from the closure types).
+Here we use the <code>nalgebra::DMatrix&lt;f64&gt;</code> type, which is a dense matrix type from the <a href="https://nalgebra.org">nalgebra</a> crate. Other options are:</p>
+<ul>
+<li><code>faer::Mat&lt;T&gt;</code> from <a href="https://github.com/sarah-ek/faer-rs">faer</a>, which is a dense matrix type.</li>
+<li><code>diffsol::SparseColMat&lt;T&gt;</code>, which is a thin wrapper around <code>faer::sparse::SparseColMat&lt;T&gt;</code>, a sparse compressed sparse column matrix type.</li>
+</ul>
+<p>Each of these matrix types have an associated vector type that is used to represent the vectors in the problem (i.e. the state vector \(y\), the parameter vector \(p\), and the gradient vector \(v\)).
+You can see in the example above that the <code>DVector</code> type is explicitly used to create the initial state vector in the third closure.
+For these matrix types the associated vector type is:</p>
+<ul>
+<li><code>nalgebra::DVector&lt;T&gt;</code> for <code>nalgebra::DMatrix&lt;T&gt;</code>.</li>
+<li><code>faer::Col&lt;T&gt;</code> for <code>faer::Mat&lt;T&gt;</code>.</li>
+<li><code>faer::Coll&lt;T&gt;</code> for <code>diffsol::SparseColMat&lt;T&gt;</code>.</li>
+</ul>
+<p>The arguments to the <code>build_ode</code> method are the equations that define the problem.
+The first closure is the function \(f(y, p, t)\) this is implemented as a closure that takes the time <code>t</code>,
+the parameter vector <code>p</code>, the state vector <code>y</code>, and a mutable reference that the closure can use to place the result (i.e. the derivative of the state vector \(f(y, p, t)\)).
+The second closure is similar in structure in defines the jacobian multiplied by a vector \(v\) function \(f'(y, p, t, v)\).
+The third closure returns the initial state vector \(y_0(p, t)\), this is done so that diffsol can infer the size of the state vector.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="mass-matrix"><a class="header" href="#mass-matrix">Mass matrix</a></h1>
+<p>In some cases, it is necessary to include a mass matrix in the problem, such that the problem is of the form</p>
+<p>\[M(t) \frac{dy}{dt} = f(t, y, p).\]</p>
+<p>A mass matrix is useful for PDE discretisation that lead to a non-identity mass matrix, or for DAE problems that can be transformed into ODEs with a singular mass matrix.
+Diffsol can handle singular and non-singular mass matrices, and the mass matrix can be time-dependent.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>To illustrate the addition of a mass matrix to a problem, we will once again take the logistic equation, but this time we will add an additional variable that is set via an algebraic equation.
+This system is written as</p>
+<p>\[\frac{dy}{dt} = r y (1 - y/K),\]
+\[0 = y - z,\]</p>
+<p>where \(z\) is the additional variable with a solution \(z = y\). When this system is put in the form \(M(t) \frac{dy}{dt} = f(t, y, p)\), the mass matrix is</p>
+<p>\[M(t) = \begin{bmatrix} 1 &amp; 0 \\ 0 &amp; 0 \end{bmatrix}.\]</p>
+<p>Like the Jacobian, the DiffSol builder does not require the full mass matrix, instead users can provide a function that gives a GEMV (General Matrix-Vector) product of the mass matrix with a vector.</p>
+<p>\[m(\mathbf{v}, \mathbf{p}, t, \beta, \mathbf{y}) = M(p, t) \mathbf{v} + \beta \mathbf{y}. \]</p>
+<p>Thus, to specify this problem using DiffSol, we can use the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> struct and provide the functions:</p>
+<p>\[f(\mathbf{y}, \mathbf{p}, t) = \begin{bmatrix} r y_0 (1 - y_0/K) \\ y_0 - y_1 \end{bmatrix},\]
+\[f'(\mathbf{y}, \mathbf{p}, t, \mathbf{v}) = \begin{bmatrix} r v_0 (1 - 2 y_0/K) \\ v_0 - v_1 \end{bmatrix},\]
+\[m(\mathbf{v}, \mathbf{p}, t, \beta, \mathbf{y}) = \begin{bmatrix} v_0 + \beta y_0 \\ \beta y_1 \end{bmatrix}.\]</p>
+<p>where \(f\) is the right-hand side of the ODE, \(f'\) is the Jacobian of \(f\) multiplied by a vector, and \(m\) is the mass matrix multiplied by a vector.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::OdeBuilder;
+use nalgebra::{DMatrix, DVector};
+type M = DMatrix&lt;f64&gt;;
+type V = DVector&lt;f64&gt;;
+
+let problem = OdeBuilder::new()
+    .t0(0.0)
+    .rtol(1e-6)
+    .atol([1e-6])
+    .p(vec![1.0, 10.0])
+    .build_ode_with_mass::&lt;M, _, _, _, _&gt;(
+    |x, p, _t, y| {
+        y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]);
+        y[1] = x[0] - x[1];
+    },
+    |x, p, _t, v , y| {
+        y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]);
+        y[1] = v[0] - v[1];
+    },
+    |v, _p, _t, beta, y| {
+        y[0] = v[0] + beta * y[0];
+        y[1] *= beta;
+    },
+    |_p, _t| V::from_element(2, 0.1),
+    ).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="root-finding"><a class="header" href="#root-finding">Root finding</a></h1>
+<p>Root finding is the process of finding the values of the variables that make a set of equations equal to zero. This is a common problem where you want to
+stop the solver or perform some action when a certain condition is met.</p>
+<h2 id="specifying-the-root-finding-function"><a class="header" href="#specifying-the-root-finding-function">Specifying the root finding function</a></h2>
+<p>Using the logistic example, we can add a root finding function \(r(y, p, t)\) that will stop the solver when the value of \(y\) is such that \(r(y, p, t) = 0\).
+For this example we'll use the root finding function \(r(y, p, t) = y - 0.5\), which will stop the solver when the value of \(y\) is 0.5.</p>
+<p>\[\frac{dy}{dt} = r y (1 - y/K),\]
+\[r(y, p, t) = y - 0.5,\]</p>
+<p>This can be done using the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> via the following code:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::OdeBuilder;
+use nalgebra::DVector;
+type M = nalgebra::DMatrix&lt;f64&gt;;
+
+let problem = OdeBuilder::new()
+    .t0(0.0)
+    .rtol(1e-6)
+    .atol([1e-6])
+    .p(vec![1.0, 10.0])
+    .build_ode_with_root::&lt;M, _, _, _, _&gt;(
+       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+       |_p, _t| DVector::from_element(1, 0.1),
+       |x, _p, _t, y| y[0] = x[0] - 0.5,
+       1,
+    ).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p>here we have added the root finding function \(r(y, p, t) = y - 0.5\), and also let DiffSol know that we have one root function by passing <code>1</code> as the last argument to the <code>build_ode_with_root</code> method.
+If we had specified more than one root function, the solver would stop when any of the root functions are zero.</p>
+<h2 id="detecting-roots-during-the-solve"><a class="header" href="#detecting-roots-during-the-solve">Detecting roots during the solve</a></h2>
+<p>To detect the root during the solve, we can use the return type on the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/trait.OdeSolverMethod.html#tymethod.step"><code>step</code></a> method of the solver.
+If successful the <code>step</code> method returns an <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/enum.OdeSolverStopReason.html"><code>OdeSolverStopReason</code></a> enum that contains the reason the solver stopped.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, OdeSolverStopReason, OdeSolverState, Bdf};
+
+<span class="boring">let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode_with_root::&lt;M, _, _, _, _&gt;(
+</span><span class="boring">        |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">        |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">        |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">        |x, _p, _t, y| y[0] = x[0] - 0.5,
+</span><span class="boring">        1,
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+let t = loop {
+    match solver.step() {
+        Ok(OdeSolverStopReason::InternalTimestep) =&gt; continue,
+        Ok(OdeSolverStopReason::TstopReached) =&gt; panic!("We didn't set a stop time"),
+        Ok(OdeSolverStopReason::RootFound(t)) =&gt; break t,
+        Err(e) =&gt; panic!("Solver failed to converge: {}", e),
+    }
+};
+println!("Root found at t = {}", t);
+let _soln = &amp;solver.state().unwrap().y;
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="forward-sensitivity"><a class="header" href="#forward-sensitivity">Forward Sensitivity</a></h1>
+<p>In this section we will discuss how to compute the forward sensitivity of the solution of an ODE problem. The forward sensitivity is the derivative of the solution with respect to the parameters of the problem. This is useful for many applications, such as parameter estimation, optimal control, and uncertainty quantification.</p>
+<h2 id="specifying-the-sensitivity-problem"><a class="header" href="#specifying-the-sensitivity-problem">Specifying the sensitivity problem</a></h2>
+<p>We will again use the example of the logistic growth equation, but this time we will compute the sensitivity of the solution \(y\) with respect to the parameters \(r\) and \(K\) (i.e. \(\frac{dy}{dr}\) and \(\frac{dy}{dK}\)).
+The logistic growth equation is:</p>
+<p>\[\frac{dy}{dt} = r y (1 - y/K),\]
+\[y(0) = 0.1\]</p>
+<p>Recall from <a href="ode_equations.html">ODE equations</a> that we also need to provide the jacobian of the right hand side of the ODE with respect to the state vector \(y\) and the gradient vector \(v\), which we will call \(J\). This is:</p>
+<p>\[J v = \begin{bmatrix} r v (1 - 2 y/K) \end{bmatrix}.\]</p>
+<p>Using the logistic growth equation above, we can compute the partial derivative of the right hand side of the ODE with respect to the vector \([r, K]\) multiplied by a vector \(v = [v_r, v_K]\), which we will call \(J_p v\). This is:</p>
+<p>\[J_p v = v_r y (1 - y/K) + v_K r y^2 / K^2 .\]</p>
+<p>We also need the partial derivative of the initial state vector with respect to the parameters multiplied by a vector \(v\), which we will call \(J_{y_0} v\). Since the initial state vector is constant, this is just zero</p>
+<p>\[J_{y_0} v = 0.\]</p>
+<p>We can then use the <code>OdeBuilder</code> struct to specify the sensitivity problem. The <code>build_ode_with_sens</code> method is used to create a new problem that includes the sensitivity equations.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::OdeBuilder;
+use nalgebra::DVector;
+type M = nalgebra::DMatrix&lt;f64&gt;;
+
+let problem = OdeBuilder::new()
+    .p(vec![1.0, 10.0])
+    .build_ode_with_sens::&lt;M, _, _, _, _, _&gt;(
+      |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+      |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+      |x, p, _t, v, y| y[0] = v[0] * x[0] * (1.0 - x[0] / p[1]) 
+        + v[1] * p[0] * x[0] * x[0] / (p[1] * p[1]),
+      |_p, _t| DVector::from_element(1, 0.1),
+      |_p, _t, _v, y| y[0] = 0.0,
+    ).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<h2 id="solving-the-sensitivity-problem"><a class="header" href="#solving-the-sensitivity-problem">Solving the sensitivity problem</a></h2>
+<p>Once the sensitivity problem has been specified, we can solve it using the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/trait.OdeSolverMethod.html"><code>OdeSolverMethod</code></a> trait.
+Lets imagine we want to solve the sensitivity problem up to a time \(t_o = 10\). We can use the <code>OdeSolverMethod</code> trait to solve the problem as normal, stepping forward in time until we reach \(t_o\).</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, OdeSolverState, Bdf};
+
+<span class="boring">let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode_with_sens::&lt;M, _, _, _, _, _&gt;(
+</span><span class="boring">      |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">      |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">      |x, p, _t, v, y| y[0] = v[0] * x[0] * (1.0 - x[0] / p[1]) + v[1] * p[0] * x[0] * x[0] / (p[1] * p[1]),
+</span><span class="boring">      |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">      |_p, _t, _v, y| y[0] = 0.0,
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+let t_o = 10.0;
+while solver.state().unwrap().t &lt; t_o {
+    solver.step().unwrap();
+}
+<span class="boring">}</span></code></pre></pre>
+<p>We can then obtain the sensitivity vectors at time \(t_o\) using the <code>interpolate_sens</code> method on the <code>OdeSolverMethod</code> trait.
+This method returns a <code>Vec&lt;DVector&lt;f64&gt;&gt;</code> where each element of the vector is the sensitivity vector for element \(i\) of the parameter vector at time \(t_o\).
+If we need the sensitivity at the current internal time step, we can get this from the <code>s</code> field of the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/struct.OdeSolverState.html"><code>OdeSolverState</code></a> struct.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span><span class="boring">use diffsol::{OdeSolverMethod, OdeSolverState, Bdf};
+</span><span class="boring">
+</span><span class="boring">let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode_with_sens::&lt;M, _, _, _, _, _&gt;(
+</span><span class="boring">      |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">      |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">      |x, p, _t, v, y| y[0] = v[0] * x[0] * (1.0 - x[0] / p[1]) + v[1] * p[0] * x[0] * x[0] / (p[1] * p[1]),
+</span><span class="boring">      |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">      |_p, _t, _v, y| y[0] = 0.0,
+</span><span class="boring">    ).unwrap();
+</span><span class="boring">let mut solver = Bdf::default();
+</span><span class="boring">let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+</span><span class="boring">solver.set_problem(state, &amp;problem);
+</span><span class="boring">let t_o = 10.0;
+</span><span class="boring">while solver.state().unwrap().t &lt; t_o {
+</span><span class="boring">    solver.step().unwrap();
+</span><span class="boring">}
+</span>let sens_at_t_o = solver.interpolate_sens(t_o).unwrap();
+let sens_at_internal_step = &amp;solver.state().as_ref().unwrap().s;
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="custom-problem-structs"><a class="header" href="#custom-problem-structs">Custom Problem Structs</a></h1>
+<p>While the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> struct is a convenient way to specify the problem, it may not be suitable in all cases.
+Often users will want to provide their own struct that can hold custom data structures and methods for evaluating the right-hand side of the ODE, the jacobian, and other functions.</p>
+<h2 id="traits"><a class="header" href="#traits">Traits</a></h2>
+<p>To use a custom struct to specify a problem, the primary goal is to implement the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/equations/trait.OdeEquations.html"><code>OdeEquations</code></a> trait.
+This trait has a number of associated traits that need to be implemented in order to specify each function, depending on if they are:</p>
+<ul>
+<li>Non-linear functions. In this case the <a href="https://docs.rs/diffsol/latest/diffsol/op/trait.NonLinearOp.html"><code>NonLinearOp</code></a> trait needs to be implemented.</li>
+<li>Linear functions. In this case the <a href="https://docs.rs/diffsol/latest/diffsol/op/trait.LinearOp.html"><code>LinearOp</code></a> trait needs to be implemented.</li>
+<li>Constant functions. In this case the <a href="https://docs.rs/diffsol/latest/diffsol/op/trait.ConstantOp.html"><code>ConstantOp</code></a> trait needs to be implemented.</li>
+</ul>
+<p>Additionally, each function needs to implement the base operation trait <a href="https://docs.rs/diffsol/latest/diffsol/op/trait.Op.html"><code>Op</code></a>.</p>
+<h2 id="odesolverequations-struct"><a class="header" href="#odesolverequations-struct">OdeSolverEquations struct</a></h2>
+<p>The <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/equations/struct.OdeSolverEquations.html"><code>OdeSolverEquations</code></a> struct is a convenience struct that already implements the <code>OdeEquations</code> trait, and can be used as a base struct for custom problem structs.
+It is not neccessary to use this struct, but it can be useful to reduce boilerplate code. The example below will use this struct, but if it does not fit your use case, you can implement the <code>OdeEquations</code> trait directly.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="non-linear-functions"><a class="header" href="#non-linear-functions">Non-linear functions</a></h1>
+<p>To illustrate how to implement a custom problem struct, we will take the familar logistic equation:</p>
+<p>\[\frac{dy}{dt} = r y (1 - y/K),\]</p>
+<p>Our goal is to implement a custom struct that can evaluate the rhs function \(f(y, p, t)\) and the jacobian multiplied by a vector \(f'(y, p, t, v)\).
+First we define a struct that, for this simple example, only holds the parameters of interest. For a more complex problem, this struct could hold data structures neccessary to compute the rhs.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use std::rc::Rc;
+type T = f64;
+type V = nalgebra::DVector&lt;T&gt;;
+
+struct MyProblem {
+    p: Rc&lt;V&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>We use an <code>Rc</code> to hold the parameters because these parameters will need to be shared between the different functions that we will implement.</p>
+<p>Now we will implement the base <code>Op</code> trait for our struct. This trait specifies the types of the vectors and matrices that will be used, as well as the number of states and outputs in the rhs function.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span>use diffsol::Op;
+
+type T = f64;
+type V = nalgebra::DVector&lt;T&gt;;
+type M = nalgebra::DMatrix&lt;T&gt;;
+
+<span class="boring">struct MyProblem {
+</span><span class="boring">    p: Rc&lt;V&gt;,
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl MyProblem {
+</span><span class="boring">    fn new(p: Rc&lt;V&gt;) -&gt; Self {
+</span><span class="boring">        MyProblem { p }
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span>impl Op for MyProblem {
+    type T = T;
+    type V = V;
+    type M = M;
+    fn nstates(&amp;self) -&gt; usize {
+        1
+    }
+    fn nout(&amp;self) -&gt; usize {
+        1
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Next we implement the <code>NonLinearOp</code> trait for our struct. This trait specifies the functions that will be used to evaluate the rhs function and the jacobian multiplied by a vector.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span>use diffsol::{
+  NonLinearOp, OdeSolverEquations, OdeSolverProblem, 
+  Op, UnitCallable, ConstantClosure
+};
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span><span class="boring">struct MyProblem {
+</span><span class="boring">    p: Rc&lt;V&gt;,
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl MyProblem {
+</span><span class="boring">    fn new(p: Rc&lt;V&gt;) -&gt; Self {
+</span><span class="boring">        MyProblem { p }
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl Op for MyProblem {
+</span><span class="boring">    type T = T;
+</span><span class="boring">    type V = V;
+</span><span class="boring">    type M = M;
+</span><span class="boring">    fn nstates(&amp;self) -&gt; usize {
+</span><span class="boring">        1
+</span><span class="boring">    }
+</span><span class="boring">    fn nout(&amp;self) -&gt; usize {
+</span><span class="boring">        1
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span>impl NonLinearOp for MyProblem {
+    fn call_inplace(&amp;self, x: &amp;V, _t: T, y: &amp;mut V) {
+        y[0] = self.p[0] * x[0] * (1.0 - x[0] / self.p[1]);
+    }
+    fn jac_mul_inplace(&amp;self, x: &amp;V, _t: T, v: &amp;V, y: &amp;mut V) {
+        y[0] = self.p[0] * v[0] * (1.0 - 2.0 * x[0] / self.p[1]);
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>There we go, all done! This demonstrates how to implement a custom struct to specify a rhs function. But this is a fair bit of boilerplate code, do we really need to do all this for <strong>every</strong> function we want to implement?</p>
+<p>Thankfully, the answer is no. If we didn't need to use our own struct for this particular function, we can alternativly use
+the <a href="https://docs.rs/diffsol/latest/diffsol/op/closure/struct.Closure.html"><code>Closure</code></a> struct to implement the <code>NonLinearOp</code> trait for us.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span><span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span>use diffsol::Closure;
+
+let rhs_fn = |x: &amp;V, p: &amp;V, _t: T, y: &amp;mut V| {
+    y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]);
+};
+let jac_fn = |x: &amp;V, p: &amp;V, _t: T, v: &amp;V, y: &amp;mut V| {
+    y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]);
+};
+let p = Rc::new(V::from_vec(vec![1.0, 10.0]));
+let rhs = Rc::new(Closure::&lt;M, _, _&gt;::new(rhs_fn, jac_fn, 1, 1, p.clone()));
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="constant-functions"><a class="header" href="#constant-functions">Constant functions</a></h1>
+<p>Now we've implemented the rhs function, but how about the initial condition? We can implement the <code>ConstantOp</code> trait to specify the initial condition. Since this is quite similar to the <code>NonLinearOp</code> trait, we will do it all in one go.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::{Op, ConstantOp};
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span>struct MyInit {}
+
+impl Op for MyInit {
+    type T = T;
+    type V = V;
+    type M = M;
+    fn nstates(&amp;self) -&gt; usize {
+        1
+    }
+    fn nout(&amp;self) -&gt; usize {
+        1
+    }
+}
+
+impl ConstantOp for MyInit {
+    fn call_inplace(&amp;self, _t: T, y: &amp;mut V) {
+        y[0] = 0.1;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Again, we can use the <a href="https://docs.rs/diffsol/latest/diffsol/op/constant_closure/struct.ConstantClosure.html"><code>ConstantClosure</code></a> struct to implement the <code>ConstantOp</code> trait for us if it's not neccessary to use our own struct.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span>use diffsol::ConstantClosure;
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span>let p = Rc::new(V::from_vec(vec![1.0, 10.0]));
+let init_fn = |_p: &amp;V, _t: T| V::from_element(1, 0.1);
+let init = Rc::new(ConstantClosure::&lt;M, _&gt;::new(init_fn, p.clone()));
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="linear-functions"><a class="header" href="#linear-functions">Linear functions</a></h1>
+<p>Naturally, we can also implement the <code>LinearOp</code> trait if we want to include a mass matrix in our model. A common use case for implementing this trait is to store the mass matrix in a custom struct, like so:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::{Op, LinearOp};
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span>struct MyMass {
+  mass: M,
+}
+
+impl MyMass {
+  fn new() -&gt; Self {
+      let mass = M::from_element(1, 1, 1.0);
+      Self { mass }
+  }
+}
+
+impl Op for MyMass {
+  type T = T;
+  type V = V;
+  type M = M;
+  fn nstates(&amp;self) -&gt; usize {
+      1
+  }
+  fn nout(&amp;self) -&gt; usize {
+      1
+  }
+}
+
+impl LinearOp for MyMass {
+  fn gemv_inplace(&amp;self, x: &amp;V, _t: T, beta: T, y: &amp;mut V) {
+      y.gemv(1.0, &amp;self.mass, x, beta)
+  }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Alternatively, we can use the <a href="https://docs.rs/diffsol/latest/diffsol/op/linear_closure/struct.LinearClosure.html"><code>LinearClosure</code></a> struct to implement the <code>LinearOp</code> trait for us.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span>use diffsol::LinearClosure;
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span><span class="boring">let p = Rc::new(V::from_vec(vec![1.0, 10.0]));
+</span>let mass_fn = |v: &amp;V, _p: &amp;V, _t: T, beta: T, y: &amp;mut V| {
+    y[0] = v[0] + beta * y[0];
+};
+let mass = Rc::new(LinearClosure::&lt;M, _&gt;::new(mass_fn, 1, 1, p.clone()));
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="putting-it-all-together"><a class="header" href="#putting-it-all-together">Putting it all together</a></h1>
+<p>Once you have structs implementing the functions for your system of equations, you can use the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/equations/struct.OdeSolverEquations.html"><code>OdeSolverEquations</code></a> struct
+to put it all together. This struct implements the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/equations/trait.OdeEquations.html"><code>OdeEquations</code></a> trait, and can be used to specify the problem to the solver.</p>
+<p>Note that it is optional to use the <code>OdeSolverEquations</code> struct, you can implement the <code>OdeEquations</code> trait directly if you prefer, but the <code>OdeSolverEquations</code> struct can be useful to reduce boilerplate code
+and make it easier to specify the problem.</p>
+<h2 id="getting-all-your-traits-in-order"><a class="header" href="#getting-all-your-traits-in-order">Getting all your traits in order</a></h2>
+<p>The <code>OdeSolverEquations</code> struct requires arguments corresponding to the right-hand side function, mass matrix, root function, initial condition, and output functions.
+For those that you want to provide, you can implement <code>NonLinearOp</code>, <code>LinearOp</code>, and <code>ConstantOp</code> traits for your structs, as described in the previous sections.
+However, some of these arguments are optional and can be set to <code>None</code> if not needed. To do this, you still need to provide a placeholder type for these arguments, so you can use the
+included <a href="https://docs.rs/diffsol/latest/diffsol/op/unit/struct.UnitCallable.html"><code>UnitCallable</code></a> type for this purpose. For example lets assume that we already have objects implementing
+the <code>NonLinearOp</code> trait for the right-hand side function, and the <code>ConstantOp</code> trait for the initial condition, but we don't have a mass matrix, root function, or output function.
+We can specify the missing arguments like so:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span>use std::rc::Rc;
+use diffsol::UnitCallable;
+
+let mass: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+let root: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+let out: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+<span class="boring">}</span></code></pre></pre>
+<h2 id="creating-the-equations"><a class="header" href="#creating-the-equations">Creating the equations</a></h2>
+<p>Now we have variables <code>rhs</code> and <code>init</code> that are structs implementing the required traits, and <code>mass</code>, <code>root</code>, and <code>out</code> set to <code>None</code>. Using these, we can create the <code>OdeSolverEquations</code> struct,
+and then provide it to the <code>OdeSolverProblem</code> struct to create the problem.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span><span class="boring">use std::rc::Rc;
+</span><span class="boring">use diffsol::{NonLinearOp, OdeSolverProblem, Op, UnitCallable, ConstantClosure};
+</span>use diffsol::OdeSolverEquations;
+
+<span class="boring">type T = f64;
+</span><span class="boring">type V = nalgebra::DVector&lt;T&gt;;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;T&gt;;
+</span><span class="boring">
+</span><span class="boring">struct MyProblem {
+</span><span class="boring">    p: Rc&lt;V&gt;,
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl MyProblem {
+</span><span class="boring">    fn new(p: Rc&lt;V&gt;) -&gt; Self {
+</span><span class="boring">        MyProblem { p }
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl Op for MyProblem {
+</span><span class="boring">    type T = T;
+</span><span class="boring">    type V = V;
+</span><span class="boring">    type M = M;
+</span><span class="boring">    fn nstates(&amp;self) -&gt; usize {
+</span><span class="boring">        1
+</span><span class="boring">    }
+</span><span class="boring">    fn nout(&amp;self) -&gt; usize {
+</span><span class="boring">        1
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl NonLinearOp for MyProblem {
+</span><span class="boring">    fn call_inplace(&amp;self, x: &amp;V, _t: T, y: &amp;mut V) {
+</span><span class="boring">        y[0] = self.p[0] * x[0] * (1.0 - x[0] / self.p[1]);
+</span><span class="boring">    }
+</span><span class="boring">    fn jac_mul_inplace(&amp;self, x: &amp;V, _t: T, v: &amp;V, y: &amp;mut V) {
+</span><span class="boring">        y[0] = self.p[0] * v[0] * (1.0 - 2.0 * x[0] / self.p[1]);
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">
+</span><span class="boring">let p = Rc::new(V::from_vec(vec![1.0, 10.0]));
+</span><span class="boring">let rhs = Rc::new(MyProblem::new(p.clone()));
+</span><span class="boring">
+</span><span class="boring">// use the provided constant closure to define the initial condition
+</span><span class="boring">let init_fn = |_p: &amp;V, _t: T| V::from_element(1, 0.1);
+</span><span class="boring">let init = Rc::new(ConstantClosure::new(init_fn, p.clone()));
+</span><span class="boring">
+</span><span class="boring">// we don't have a mass matrix, root or output functions, so we can set to None
+</span><span class="boring">// we still need to give a placeholder type for these, so we use the diffsol::UnitCallable type
+</span><span class="boring">let mass: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+</span><span class="boring">let root: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+</span><span class="boring">let out: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+</span><span class="boring">
+</span><span class="boring">let p = Rc::new(V::zeros(0));
+</span>let eqn = OdeSolverEquations::new(rhs, mass, root, init, out, p.clone());
+let rtol = 1e-6;
+let atol = V::from_element(1, 1e-6);
+let t0 = 0.0;
+let h0 = 1.0;
+let with_sensitivity = false;
+let sens_error_control = false;
+let _problem = OdeSolverProblem::new(
+    eqn, rtol, atol, t0, h0, with_sensitivity, sens_error_control
+).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p>Note the last two arguments to <code>OdeSolverProblem::new</code> are for sensitivity analysis which we will turn off for now.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="diffsl"><a class="header" href="#diffsl">DiffSL</a></h1>
+<p>Thus far we have used Rust code to specify the problem we want to solve. This is fine if you are using DiffSol from Rust, but what if you want to use DiffSol from a higher-level language like Python or R?
+For this usecase we have designed a Domain Specific Language (DSL) called DiffSL that can be used to specify the problem. DiffSL is not a general purpose language but is tightly constrained to
+the specification of a system of ordinary differential equations. It features a relativly simple syntax that consists of writing a series of tensors (dense or sparse) that represent the equations of the system.
+For more detail on the syntax of DiffSL see the <a href="https://martinjrobins.github.io/diffsl/">DiffSL book</a>. This section will focus on how to use DiffSL to specify a problem in DiffSol.</p>
+<h2 id="diffsl-context"><a class="header" href="#diffsl-context">DiffSL Context</a></h2>
+<p>The main struct that is used to specify a problem in DiffSL is the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/diffsl/struct.DiffSlContext.html"><code>DiffSlContext</code></a> struct. Creating this struct
+Just-In-Time (JIT) compiles your DiffSL code into a form that can be executed efficiently by DiffSol.</p>
+<pre><code class="language-rust  ignore"><span class="boring">fn main() {
+</span>use diffsol::DiffSlContext;
+type M = nalgebra::DMatrix&lt;f64&gt;;
+        
+let context = DiffSlContext::&lt;M&gt;::new("
+    in = [r, k]
+    r { 1.0 }
+    k { 1.0 }
+    u { 0.1 }
+    F { r * u * (1.0 - u / k) }
+    out { u }
+").unwrap();
+<span class="boring">}</span></code></pre>
+<p>Once you have created the <code>DiffSlContext</code> struct you can use it to create a problem using the <code>build_diffsl</code> method on the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/builder/struct.OdeBuilder.html"><code>OdeBuilder</code></a> struct.</p>
+<pre><code class="language-rust  ignore"><span class="boring">fn main() {
+</span><span class="boring">use diffsol::DiffSlContext;
+</span>use diffsol::{OdeBuilder, Bdf, OdeSolverMethod};
+<span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>
+        
+<span class="boring">let context = DiffSlContext::&lt;M&gt;::new("
+</span><span class="boring">    in = [r, k]
+</span><span class="boring">    r { 1.0 }
+</span><span class="boring">    k { 1.0 }
+</span><span class="boring">    u { 0.1 }
+</span><span class="boring">    F { r * u * (1.0 - u / k) }
+</span><span class="boring">    out { u }
+</span><span class="boring">").unwrap();
+</span>let problem = OdeBuilder::new()
+.rtol(1e-6)
+.p([1.0, 10.0])
+.build_diffsl(&amp;context).unwrap();
+let mut solver = Bdf::default();
+let t = 0.4;
+let _soln = solver.solve(&amp;problem, t).unwrap();
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="sparse-problems"><a class="header" href="#sparse-problems">Sparse problems</a></h1>
+<p>Lets consider a large system of equations that have a jacobian matrix that is sparse. For simplicity we will start with the logistic equation from the <a href="./specifying_the_problem.html">"Specifying the Problem"</a> section,
+but we will duplicate this equation 10 times to create a system of 10 equations. This system will have a jacobian matrix that is a diagonal matrix with 10 diagonal elements, and all other elements are zero.</p>
+<p>Since this system is sparse, we choose a sparse matrix type to represent the jacobian matrix. We will use the <code>diffsol::SparseColMat&lt;T&gt;</code> type, which is a thin wrapper around <code>faer::sparse::SparseColMat&lt;T&gt;</code>, a sparse compressed sparse column matrix type.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use diffsol::OdeBuilder;
+type M = diffsol::SparseColMat&lt;f64&gt;;
+type V = faer::Col&lt;f64&gt;;
+
+let problem = OdeBuilder::new()
+    .t0(0.0)
+    .rtol(1e-6)
+    .atol([1e-6])
+    .p(vec![1.0, 10.0])
+    .build_ode::&lt;M, _, _, _&gt;(
+       |x, p, _t, y| {
+         for i in 0..10 {
+           y[i] = p[0] * x[i] * (1.0 - x[i] / p[1]);
+         }
+       },
+       |x, p, _t, v , y| {
+         for i in 0..10 {
+           y[i] = p[0] * v[i] * (1.0 - 2.0 * x[i] / p[1]);
+         }
+       },
+       |_p, _t| V::from_fn(10, |_| 0.1),
+    ).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p>Note that we have not specified the jacobian itself, but instead we have specified the jacobian multiplied by a vector function \(f'(y, p, t, v)\).
+DiffSol will use this function to generate a jacobian matrix, and since we have specified a sparse matrix type, DiffSol will attempt to
+guess the sparsity pattern of the jacobian matrix and use this to efficiently generate the jacobian matrix.</p>
+<p>To illustrate this, we can calculate the jacobian matrix from the <code>rhs</code> function contained in the <code>problem</code> object:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span>use diffsol::{OdeEquations, NonLinearOp, Matrix, ConstantOp};
+
+<span class="boring">type M = diffsol::SparseColMat&lt;f64&gt;;
+</span><span class="boring">type V = faer::Col&lt;f64&gt;;
+</span><span class="boring">
+</span><span class="boring">fn main() {
+</span><span class="boring"> let problem = OdeBuilder::new()
+</span><span class="boring">   .t0(0.0)
+</span><span class="boring">   .rtol(1e-6)
+</span><span class="boring">   .atol([1e-6])
+</span><span class="boring">   .p(vec![1.0, 10.0])
+</span><span class="boring">   .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">   |x, p, _t, y| {
+</span><span class="boring">     for i in 0..10 {
+</span><span class="boring">       y[i] = p[0] * x[i] * (1.0 - x[i] / p[1]);
+</span><span class="boring">     }
+</span><span class="boring">   },
+</span><span class="boring">   |x, p, _t, v , y| {
+</span><span class="boring">     for i in 0..10 {
+</span><span class="boring">       y[i] = p[0] * v[i] * (1.0 - 2.0 * x[i] / p[1]);
+</span><span class="boring">     }
+</span><span class="boring">   },
+</span><span class="boring">   |_p, _t| V::from_fn(10, |_| 0.1),
+</span><span class="boring">   ).unwrap();
+</span>let t0 = problem.t0;
+let y0 = problem.eqn.init().call(t0);
+let jacobian = problem.eqn.rhs().jacobian(&amp;y0, t0);
+for (i, j, v) in jacobian.triplet_iter() {
+    println!("({}, {}) = {}", i, j, v);
+}
+<span class="boring">}</span></code></pre></pre>
+<p>which will print the jacobian matrix in triplet format:</p>
+<pre><code>(0, 0) = 0.98
+(1, 1) = 0.98
+(2, 2) = 0.98
+(3, 3) = 0.98
+(4, 4) = 0.98
+(5, 5) = 0.98
+(6, 6) = 0.98
+(7, 7) = 0.98
+(8, 8) = 0.98
+(9, 9) = 0.98
+</code></pre>
+<p>DiffSol attempts to guess the sparsity pattern of your jacobian matrix by calling the \(f'(y, p, t, v)\) function repeatedly with different one-hot vectors \(v\)
+with a <code>NaN</code> value at each index. The output of this function (i.e. which elements are <code>0</code> and which are <code>NaN</code>) is then used to determine the sparsity pattern of the jacobian matrix.
+Due to the fact that for IEEE 754 floating point numbers, <code>NaN</code> is propagated through most operations, this method is able to detect which output elements are dependent on which input elements.</p>
+<p>However, this method is not foolproof, and it may fail to detect the correct sparsity pattern in some cases, particularly if values of <code>v</code> are used in control-flow statements.
+If DiffSol does not detect the correct sparsity pattern, you can manually specify the jacobian. To do this, you need
+to implement the <a href="https://docs.rs/diffsol/latest/diffsol/op/trait.NonLinearOp.html"><code>diffsol::NonLinearOp</code></a> trait for the rhs function.
+This is described in more detail in the <a href="./custom_problem_structs.html">"Custom Problem Structs"</a> section, but is illustrated below.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">fn main() {
+</span>use std::rc::Rc;
+use faer::sparse::{SparseColMat, SymbolicSparseColMatRef};
+use diffsol::{NonLinearOp, OdeSolverEquations, OdeSolverProblem, Op, UnitCallable, ConstantClosure};
+
+type T = f64;
+type V = faer::Col&lt;T&gt;;
+type M = diffsol::SparseColMat&lt;T&gt;;
+
+struct MyProblem {
+  jacobian: SparseColMat&lt;usize, T&gt;,
+  p: Rc&lt;V&gt;,
+}
+
+impl MyProblem {
+  fn new(p: Rc&lt;V&gt;) -&gt; Self {
+    let mut triplets = Vec::new();
+    for i in 0..10 {
+      triplets.push((i, i, 1.0));
+    }
+    let jacobian = SparseColMat::try_new_from_triplets(10, 10, triplets.as_slice()).unwrap();
+    MyProblem { p, jacobian }
+  }
+}
+
+impl Op for MyProblem {
+  type T = T;
+  type V = V;
+  type M = M;
+  fn nstates(&amp;self) -&gt; usize {
+    10
+  }
+  fn nout(&amp;self) -&gt; usize {
+    10
+  }
+  fn sparsity(&amp;self) -&gt; Option&lt;SymbolicSparseColMatRef&lt;usize&gt;&gt; {
+    Some(self.jacobian.symbolic())
+  }
+}
+  
+impl NonLinearOp for MyProblem {
+  fn call_inplace(&amp;self, x: &amp;V, _t: T, y: &amp;mut V) {
+    for i in 0..10 {
+      y[i] = self.p[0] * x[i] * (1.0 - x[i] / self.p[1]);
+    }
+  }
+ fn jac_mul_inplace(&amp;self, x: &amp;V, _t: T, v: &amp;V, y: &amp;mut V) {
+    for i in 0..10 {
+      y[i] = self.p[0] * v[i] * (1.0 - 2.0 * x[i] / self.p[1]);
+    }
+  }
+  fn jacobian_inplace(&amp;self, x: &amp;Self::V, _t: Self::T, y: &amp;mut Self::M) {
+    for i in 0..10 {
+      let row = y.faer().row_indices()[i];
+      y.faer_mut().values_mut()[i] = self.p[0] * (1.0 - 2.0 * x[row] / self.p[1]);
+    }
+  }
+}
+
+let p = [1.0, 10.0];
+let p = Rc::new(V::from_fn(p.len(), |i| p[i]));
+let rhs = Rc::new(MyProblem::new(p.clone()));
+
+// use the provided constant closure to define the initial condition
+let init_fn = |_p: &amp;V, _t: T| V::from_fn(10, |_| 0.1);
+let init = Rc::new(ConstantClosure::new(init_fn, p.clone()));
+
+// we don't have a mass matrix, root or output functions, so we can set to None
+// we still need to give a placeholder type for these, so we use the diffsol::UnitCallable type
+let mass: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+let root: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+let out: Option&lt;Rc&lt;UnitCallable&lt;M&gt;&gt;&gt; = None;
+
+let p = Rc::new(V::zeros(0));
+let eqn = OdeSolverEquations::new(rhs, mass, root, init, out, p.clone());
+let rtol = 1e-6;
+let atol = V::from_fn(10, |_| 1e-6);
+let t0 = 0.0;
+let h0 = 1.0;
+let _problem = OdeSolverProblem::new(eqn, rtol, atol, t0, h0, false, false).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="choosing-a-solver"><a class="header" href="#choosing-a-solver">Choosing a solver</a></h1>
+<p>Once you have defined the problem, you need to create a solver to solve the problem. The available solvers are:</p>
+<ul>
+<li><a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/bdf/struct.Bdf.html"><code>diffsol::Bdf</code></a>: A Backwards Difference Formulae solver, suitable for stiff problems and singular mass matrices.</li>
+<li><a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/sdirk/struct.Sdirk.html"><code>diffsol::Sdirk</code></a> A Singly Diagonally Implicit Runge-Kutta (SDIRK or ESDIRK) solver. You can define your own butcher tableau using <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/tableau/struct.Tableau.html"><code>Tableau</code></a> or use one of the pre-defined tableaues.</li>
+</ul>
+<p>Each of these solvers has a number of generic arguments, for example the <code>Bdf</code> solver has three generic arguments:</p>
+<ul>
+<li><code>M</code>: The matrix type used to define the problem.</li>
+<li><code>Eqn</code>: The type of the equations struct that defines the problem.</li>
+<li><code>Nls</code>: The type of the non-linear solver used to solve the implicit equations in the solver.</li>
+</ul>
+<p>In normal use cases, Rust can infer these from your code so you don't need to specify these explicitly. The <code>Bdf</code> solver implements the <code>Default</code> trait so can be easily created using:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::{OdeBuilder, OdeSolverState};
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::Bdf;
+<span class="boring">fn main() {
+</span><span class="boring">
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let solver = Bdf::default();
+<span class="boring">  let _state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+</span><span class="boring">}</span></code></pre></pre>
+<p>The <code>Sdirk</code> solver requires a tableu to be specified so you can use its <code>new</code> method to create a new solver, for example using the <code>tr_bdf2</code> tableau:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::{OdeBuilder, OdeSolverState};
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{Sdirk, Tableau, NalgebraLU};
+<span class="boring">fn main() {
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let solver = Sdirk::new(Tableau::&lt;M&gt;::tr_bdf2(), NalgebraLU::default());
+<span class="boring">  let _state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+</span><span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="initialisation"><a class="header" href="#initialisation">Initialisation</a></h1>
+<p>Before you can solve the problem, you need to generate an intitial state for the solution. DiffSol uses the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/struct.OdeSolverState.html"><code>OdeSolverState</code></a>
+struct to hold the current state of the solution, this is a struct that contains the state vector, the gradient of the state vector, the time, and the current step size.</p>
+<p>You can create a new state for an ODE problem using the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/struct.OdeSolverState.html#method.new"><code>OdeSolverState::new</code></a> method,
+which takes as arguments the problem and solver instances.
+This method uses the \(y_0(p, t)\) closure to generate an intial state vector, and the \(f(y, p, t)\) closure to generate the gradient of the state vector. It will also set the time to the initial time
+given by the <code>OdeSolverProblem</code> struct, and will guess a suitable step size based on the initial state vector and the gradient of the state vector. If you want to set the step size manually or have
+more control over the initialisation of the state, you can use the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/struct.OdeSolverState.html#method.new_without_initialise"><code>OdeSolverState::new_without_initialise</code></a> method.</p>
+<p>Once the state is created then you can use the state and the problem to initialise the solver in preparation for solving the problem.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverState, OdeSolverMethod, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="solving-the-problem"><a class="header" href="#solving-the-problem">Solving the Problem</a></h1>
+<p>Each solver implements the <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/trait.OdeSolverMethod.html"><code>OdeSolverMethod</code></a> trait, which provides a number of methods to solve the problem.
+The fundamental method to solve the problem is the <code>step</code> method on the <code>OdeSolverMethod</code> trait, which steps the solution forward in time by a single step, with a step size chosen by the solver
+in order to satisfy the error tolerances in the <code>problem</code> struct. The <code>step</code> method returns a <code>Result</code> that contains the new state of the solution if the step was successful, or an error if the step failed.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, OdeSolverState, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+while solver.state().unwrap().t &lt; 10.0 {
+    if let Err(_) = solver.step() {
+        break;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The <code>step</code> method will return an error if the solver fails to converge to the solution or if the step size becomes too small.</p>
+<p>Often you will want to get the solution at a specific time \(t_o\). There are two ways to do this based on your particular needs, the most lightweight way is to step the solution forward
+until you are beyond \(t_o\), and then interpolate the solution back to \(t_o\) using the <code>interpolate</code> method on the <code>OdeSolverMethod</code> trait.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, OdeSolverState, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+let t_o = 10.0;
+while solver.state().unwrap().t &lt; t_o {
+    solver.step().unwrap();
+}
+let _soln = solver.interpolate(t_o).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p>The second way is to use the <code>set_stop_time</code> method on the <code>OdeSolverMethod</code> trait to stop the solver at a specific time, this will override the internal time step so that the solver stops at the specified time.
+Note that this can be less efficient if you wish to continue stepping forward after the specified time, as the solver will need to be re-initialised.
+The enum returned by <code>step</code> will indicate when the solver has stopped at the specified time.
+Once the solver has stopped at the specified time, you can get the current state of the solution using the <code>state</code> method on the solver, which returns an <a href="https://docs.rs/diffsol/latest/diffsol/ode_solver/method/struct.OdeSolverState.html"><code>OdeSolverState</code></a> struct.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, OdeSolverStopReason, OdeSolverState, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let state = OdeSolverState::new(&amp;problem, &amp;solver).unwrap();
+solver.set_problem(state, &amp;problem);
+solver.set_stop_time(10.0).unwrap();
+loop {
+    match solver.step() {
+        Ok(OdeSolverStopReason::InternalTimestep) =&gt; continue,
+        Ok(OdeSolverStopReason::TstopReached) =&gt; break,
+        Ok(OdeSolverStopReason::RootFound(_)) =&gt; panic!("Root finding not used"),
+        Err(e) =&gt; panic!("Solver failed to converge: {}", e),
+    }
+}
+let _soln = &amp;solver.state().unwrap().y;
+<span class="boring">}</span></code></pre></pre>
+<p>DiffSol also has two convenience functions <code>solve</code> and <code>solve_dense</code> on the <code>OdeSolverMethod</code> trait. <code>solve</code> will initialise the problem and solve the problem up to a specified time, returning the solution at all the
+internal timesteps used by the solver. This function returns a tuple that contains a <code>Vec</code> of
+the solution at each timestep, and a <code>Vec</code> of the times at each timestep.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let (ys, ts) = solver.solve(&amp;problem, 10.0).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<p><code>solve_dense</code> will initialise the problem and solve the problem, returning the solution at a <code>Vec</code> of times provided by the user. This function returns a <code>Vec&lt;V&gt;</code>, where <code>V</code> is the vector type used to define the problem.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">use diffsol::OdeBuilder;
+</span><span class="boring">use nalgebra::DVector;
+</span><span class="boring">type M = nalgebra::DMatrix&lt;f64&gt;;
+</span>use diffsol::{OdeSolverMethod, Bdf};
+
+<span class="boring">fn main() {
+</span><span class="boring">  let problem = OdeBuilder::new()
+</span><span class="boring">    .p(vec![1.0, 10.0])
+</span><span class="boring">    .build_ode::&lt;M, _, _, _&gt;(
+</span><span class="boring">       |x, p, _t, y| y[0] = p[0] * x[0] * (1.0 - x[0] / p[1]),
+</span><span class="boring">       |x, p, _t, v , y| y[0] = p[0] * v[0] * (1.0 - 2.0 * x[0] / p[1]),
+</span><span class="boring">       |_p, _t| DVector::from_element(1, 0.1),
+</span><span class="boring">    ).unwrap();
+</span>let mut solver = Bdf::default();
+let times = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
+let _soln = solver.solve_dense(&amp;problem, &amp;times).unwrap();
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="benchmarks"><a class="header" href="#benchmarks">Benchmarks</a></h1>
+<p>The goal of this chapter is to compare the performance of the DiffSol
+implementation with other similar ode solver libraries. To begin with we have
+focused on comparing against the popular
+<a href="https://github.com/LLNL/sundials">Sundials</a> solver suite, developed by the
+Lawrence Livermore National Laboratory.</p>
+<h2 id="test-problems"><a class="header" href="#test-problems">Test Problems</a></h2>
+<p>To choose the test problems we have used several of the examples provided in the Sundials library. The problems are:</p>
+<ul>
+<li><code>robertson</code> : A stiff DAE system with 3 equations (2 differential and 1 algebraic). In Sundials this is part of the IDA examples
+and is contained in the file <code>ida/serial/idaRoberts_dns.c</code>. In Sundials the problem is solved using the Sundials dense linear solver and <code>Sunmatrix_Dense</code>, in DiffSol we use the
+dense LU linear solver, dense matrices and vectors from the <a href="https://nalgebra.org">nalgebra</a> library.</li>
+<li><code>robertson_ode</code>: The same problem as <code>robertson</code> but in the form of an ODE. This problem has a variable size implemented
+by duplicating the 3 original equations \(n^2\) times, where \(n\) is the size input parameter. In Sundials problem is solved using the KLU sparse linear solver and the <code>Sunmatrix_Sparse</code> matrix, and in DiffSol we use the
+same KLU solver from the <a href="https://github.com/DrTimothyAldenDavis/SuiteSparse">SuiteSparse</a> library along with the <a href="https://github.com/sarah-ek/faer-rs">faer</a> sparse matrix.
+This example is part of the Sundials CVODE examples and is contained in the file <code>cvode/serial/cvRoberts_block_klu.c</code>.</li>
+<li><code>heat2d</code>: A 2D heat DAE problem with boundary conditions imposed via algebraic equations. The size \(n\) input parameter sets the number of grid points along each dimension, so the
+total number of equations is \(n^2\). This is part of the IDA examples and is contained in the file <code>ida/serial/idaHeat2D_klu.c</code>.
+In Sundials this problem is solved using the KLU sparse linear solver and the Sunmatrix_Sparse matrix, and in DiffSol we use the same KLU solver along with the faer sparse matrix.</li>
+<li><code>foodweb</code>: A predator-prey problem with diffusion on a 2D grid. The size \(n\) input parameter sets the number of grid points along each dimension and we have 2 species, so the
+total number of equations is \(2n^2\) This is part of the IDA examples and is contained in the file <code>ida/serial/idaFoodWeb_bnd.c</code>.
+In Sundials the problem is solved using a banded linear solver and the <code>Sunmatrix_Band</code> matrix. DiffSol does not have a banded linear solver, so we use the KLU solver for this problem along with the faer sparse matrix.</li>
+</ul>
+<h2 id="method"><a class="header" href="#method">Method</a></h2>
+<p>In each case we have taken the example files from the Sundials library at version 6.7.0, compiling and linking them against the same version of the code.
+We have made minimal modifications to the files to remove all <code>printf</code> output and to change the <code>main</code> functions to named functions to allow them to be called from rust.
+We have then implemented the same problem in Rust using the DiffSol library, porting the residual functions defined in the Sundials examples to DiffSol-compatible functions representing the RHS, mass matrix and jacobian multiplication functions for the problem.
+We have used the outputs published in the Sundials examples as the reference outputs for the tests to ensure that the implementations are equivalent.
+The relative and absolute tolerances for the solvers were set to the same values in both implementations.</p>
+<p>There are a number of differences between the Sundials and DiffSol implementations that may affect the performance of the solvers. The main differences are:</p>
+<ul>
+<li>The Sundials IDA solver has the problem defined as a general DAE system, while the DiffSol solver has access to the RHS and mass matrix functions separately.
+The Sundials CVODE solver has the problem defined as an ODE system and the mass is implicitly an identity matrix, and this is the same for the DiffSol implementation for the <code>robertson_ode</code> problem.</li>
+<li>In the Sundials examples that use a user-defined jacobian (<code>robertson</code>, <code>robertson_ode</code>, <code>heat2d</code>), the jacobian is provided as a sparse or dense matrix. In DiffSol the jacobian is provided as a function that multiplies the jacobian by a vector,
+so DiffSol needs to do additional work to generate a jacobian matrix from this function.</li>
+<li>Generally the types of matrices and linear solver are matched between the two implementations (see details in the "Test Problems" section above). However, the <code>foodweb</code> problem is slightly different in that
+it is solved in Sundials using a banded linear solver and banded matrices and the jacobian is calculated using finite differences.
+In DiffSol we use the KLU sparse linear solver and sparse matrices, and the jacobian is calculated using the jacobian function provided by the user.</li>
+<li>The Sundials implementations make heavy use of indexing into arrays, as does the DiffSol implementations. In Rust these indexing is bounds checked, which affects performance slightly but was not found to be a significant factor.</li>
+</ul>
+<p>Finally, we have also implemented the <code>robertson</code>, <code>heat2d</code> and <code>foodweb</code>
+problems in the DiffSl language. For the <code>heat2d</code> and <code>foodweb</code> problems we
+wrote out the diffusion matrix and mass matrix from the Rust implementations and
+wrote the rest of the model by hand. For the <code>robertson</code> problem we wrote the
+entire model by hand.</p>
+<h2 id="results"><a class="header" href="#results">Results</a></h2>
+<p>These results were generated using DiffSol v0.1.15.</p>
+<p>The performance of each implementation was timed and includes all setup and solve time. The exception to this is for the DiffSl implementations, where the JIT compilation for the model was not included in the timings
+(since the compilation time for the C and Rust code was also not included).
+We have presented the results in the following graphs, where the x-axis is the size of the problem \(n\) and the y-axis is the time taken to solve the problem relative to the time taken by the Sundials implementation
+(so \(10^0\) is the same time as Sundials, \(10^1\) is 10 times slower etc.)</p>
+<h3 id="bdf-solver"><a class="header" href="#bdf-solver">Bdf solver</a></h3>
+<p><img src="./images/benchmarks/bench_bdf.svg" alt="Bdf" /></p>
+<p>The BDF solver is the same method as that used by the Sundials IDA and CVODE solvers so we expect the performance to be largely similar, and this is generally the case.
+There are differences due to the implementation details for each library, and the differences in the implementations for the linear solvers and matrices as discussed above.</p>
+<p>For the small, dense, stiff <code>robertson</code> problem the DiffSol implementation is very close and only slightly faster than Sundials (about 0.9).</p>
+<p>For the sparse <code>heat2d</code> problem the DiffSol implementation is slower than Sundials for smaller problems (about 2) but the performance improves significantly for larger problems until it is at about 0.3.
+Since this improvement for larger systems is not seen in <code>foodweb</code> or <code>robertson_ode</code> problems, it is likely due to the fact that the <code>heat2d</code> problem has a constant jacobian matrix and the DiffSol implementation has an advantage in this case.</p>
+<p>For the <code>foodweb</code> problem the DiffSol implementation is quite close to IDA for all sizes.
+It is again slower for small systems (about 1.5) and the performance improves for medium systems until it reaches a value of 0.7, but then performance starts to slowly decrease for larger systems until it is about 1.0</p>
+<p>The DiffSol implementation of the <code>robertson_ode</code> problem is the only problem generally slower then the Sundials CVODE implementation and is about 1.5 - 1.9 the time taken by Sundials. Since the same method and linear solver is used in both cases the cause of this discrepancy is not
+due to these factors, but is likely due to the differences in how the jacobian is calculated (in Sundials it is provided directly, but DiffSol is required to calculate it from the jacobian multiplication function).</p>
+<h3 id="bdf--diffsl"><a class="header" href="#bdf--diffsl">Bdf + DiffSl</a></h3>
+<p><img src="./images/benchmarks/bench_bdf_diffsl.svg" alt="Bdf + DiffSl" /></p>
+<p>The main difference between this plot and the previous for the Bdf solver is the use of the DiffSl language for the equations, rather than Rust closures.
+The trends in each case are mostly the same, and the DiffSl implementation only has a small slowdown comparared with rust closures for most problems.
+This difference is minimal, and can be seen most clearly for the small <code>robertson</code> problem where the DiffSl implementation is just above 1.0 times the speed of the Sundials implementation, while the rust closure implementation is about 0.9.
+However, for some larger systems the DiffSl can be faster, for example the <code>foodweb</code> problem is quicker at larger sizes, which is probably due to the fact that the rust closures bound-check the array indexing, while the DiffSl implementation does not.</p>
+<p>This plot demonstrates that a DiffSL implementation can be comparable in speed to a hand-written Rust or C implementation, but much more easily wrapped and used from a high-level language like Python or R, where the equations can be passed down
+to the rust solver as a simple string and then JIT compiled at runtime.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
