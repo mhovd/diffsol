@@ -90,11 +90,6 @@ where
     M: DenseMatrix<V = Eqn::V, T = Eqn::T, C = Eqn::C>,
     Eqn::V: DefaultDenseMatrix<T = Eqn::T, C = Eqn::C>,
 {
-    const MIN_FACTOR: f64 = 0.2;
-    const MAX_FACTOR: f64 = 10.0;
-    const MIN_TIMESTEP: f64 = 1e-13;
-    const MAX_ERROR_TEST_FAILS: usize = 40;
-
     pub(crate) fn new(
         problem: &'a OdeSolverProblem<Eqn>,
         state: RkState<Eqn::V>,
@@ -225,36 +220,45 @@ where
         let s = tableau.s();
         for i in 0..s {
             for j in i..s {
-                assert_eq!(
-                    tableau.a().get_index(i, j),
-                    Eqn::T::zero(),
-                    "Invalid tableau, expected a(i, j) = 0 for i >= j"
-                );
+                if tableau.a().get_index(i, j) != Eqn::T::zero() {
+                    return Err(ode_solver_error!(
+                        InvalidTableau,
+                        format!(
+                            "Invalid tableau, expected a(i, j) = 0 for i >= j, but found a({}, {}) = {}",
+                            i,
+                            j,
+                            tableau.a().get_index(i, j)
+                        )
+                    ));
+                }
             }
         }
 
         // check last row of a is the same as b
         for i in 0..s {
-            assert_eq!(
-                tableau.a().get_index(s - 1, i),
-                tableau.b().get_index(i),
-                "Invalid tableau, expected a(s-1, i) = b(i)"
-            );
+            if tableau.a().get_index(s - 1, i) != tableau.b().get_index(i) {
+                return Err(ode_solver_error!(
+                    InvalidTableau,
+                    "Invalid tableau, expected a(s-1, i) = b(i)"
+                ));
+            }
         }
 
         // check that last c is 1
-        assert_eq!(
-            tableau.c().get_index(s - 1),
-            Eqn::T::one(),
-            "Invalid tableau, expected c(s-1) = 1"
-        );
+        if tableau.c().get_index(s - 1) != Eqn::T::one() {
+            return Err(ode_solver_error!(
+                InvalidTableau,
+                "Invalid tableau, expected c(s-1) = 1"
+            ));
+        }
 
         // check that first c is 0
-        assert_eq!(
-            tableau.c().get_index(0),
-            Eqn::T::zero(),
-            "Invalid tableau, expected c(0) = 0"
-        );
+        if tableau.c().get_index(0) != Eqn::T::zero() {
+            return Err(ode_solver_error!(
+                InvalidTableau,
+                "Invalid tableau, expected c(0) = 0"
+            ));
+        }
         Ok(())
     }
 
@@ -267,54 +271,60 @@ where
         let s = tableau.s();
         for i in 0..s {
             for j in (i + 1)..s {
-                assert_eq!(
-                    tableau.a().get_index(i, j),
-                    Eqn::T::zero(),
-                    "Invalid tableau, expected a(i, j) = 0 for i > j"
-                );
+                if tableau.a().get_index(i, j) != Eqn::T::zero() {
+                    return Err(ode_solver_error!(
+                        InvalidTableau,
+                        "Invalid tableau, expected a(i, j) = 0 for i > j"
+                    ));
+                }
             }
         }
         let gamma = tableau.a().get_index(1, 1);
         //check that for i = 1..s-1, a(i, i) = gamma
         for i in 1..tableau.s() {
-            assert_eq!(
-                tableau.a().get_index(i, i),
-                gamma,
-                "Invalid tableau, expected a(i, i) = gamma = {gamma} for i = 1..s-1",
-            );
+            if tableau.a().get_index(i, i) != gamma {
+                return Err(ode_solver_error!(
+                    InvalidTableau,
+                    format!("Invalid tableau, expected a(i, i) = gamma = {gamma} for i = 1..s-1")
+                ));
+            }
         }
         // if a(0, 0) = gamma, then we're a SDIRK method
         // if a(0, 0) = 0, then we're a ESDIRK method
         // otherwise, error
         let zero = Eqn::T::zero();
         if tableau.a().get_index(0, 0) != zero && tableau.a().get_index(0, 0) != gamma {
-            panic!("Invalid tableau, expected a(0, 0) = 0 or a(0, 0) = gamma");
+            return Err(ode_solver_error!(
+                InvalidTableau,
+                "Invalid tableau, expected a(0, 0) = 0 or a(0, 0) = gamma"
+            ));
         }
         let is_sdirk = tableau.a().get_index(0, 0) == gamma;
 
         // check last row of a is the same as b
         for i in 0..s {
-            assert_eq!(
-                tableau.a().get_index(s - 1, i),
-                tableau.b().get_index(i),
-                "Invalid tableau, expected a(s-1, i) = b(i)"
-            );
+            if tableau.a().get_index(s - 1, i) != tableau.b().get_index(i) {
+                return Err(ode_solver_error!(
+                    InvalidTableau,
+                    "Invalid tableau, expected a(s-1, i) = b(i)"
+                ));
+            }
         }
 
         // check that last c is 1
-        assert_eq!(
-            tableau.c().get_index(s - 1),
-            Eqn::T::one(),
-            "Invalid tableau, expected c(s-1) = 1"
-        );
+        if tableau.c().get_index(s - 1) != Eqn::T::one() {
+            return Err(ode_solver_error!(
+                InvalidTableau,
+                "Invalid tableau, expected c(s-1) = 1"
+            ));
+        }
 
         // check that the first c is 0 for esdirk methods
-        if !is_sdirk {
-            assert_eq!(
-                tableau.c().get_index(0),
-                Eqn::T::zero(),
+        if !is_sdirk && tableau.c().get_index(0) != Eqn::T::zero() {
+            return Err(ode_solver_error!(
+                InvalidTableau,
                 "Invalid tableau, expected c(0) = 0 for esdirk methods"
-            );
+            ));
         }
         Ok(())
     }
@@ -392,14 +402,20 @@ where
         Ok(self.state.h)
     }
 
-    pub(crate) fn factor(&self, error_norm: Eqn::T, safety_factor: f64) -> Eqn::T {
+    pub(crate) fn factor(
+        &self,
+        error_norm: Eqn::T,
+        safety_factor: f64,
+        min_factor: Eqn::T,
+        max_factor: Eqn::T,
+    ) -> Eqn::T {
         let safety = Eqn::T::from(0.9 * safety_factor);
         let mut factor = safety * error_norm.pow(Eqn::T::from(-0.5 / (self.order() as f64 + 1.0)));
-        if factor < Eqn::T::from(Self::MIN_FACTOR) {
-            factor = Eqn::T::from(Self::MIN_FACTOR);
+        if factor < min_factor {
+            factor = min_factor;
         }
-        if factor > Eqn::T::from(Self::MAX_FACTOR) {
-            factor = Eqn::T::from(Self::MAX_FACTOR);
+        if factor > max_factor {
+            factor = max_factor;
         }
         factor
     }
@@ -746,10 +762,12 @@ where
         &mut self,
         h: Eqn::T,
         nattempts: usize,
+        max_error_test_fails: usize,
+        min_timestep: Eqn::T,
     ) -> Result<(), DiffsolError> {
         self.statistics.number_of_error_test_failures += 1;
         // if too many error test failures, then fail
-        if nattempts >= Self::MAX_ERROR_TEST_FAILS {
+        if nattempts >= max_error_test_fails {
             return Err(DiffsolError::from(
                 OdeSolverError::TooManyErrorTestFailures {
                     time: self.state.t.into(),
@@ -757,7 +775,7 @@ where
             ));
         }
         // if step size too small, then fail
-        if abs(h) < Eqn::T::from(Self::MIN_TIMESTEP) {
+        if abs(h) < min_timestep {
             return Err(DiffsolError::from(OdeSolverError::StepSizeTooSmall {
                 time: self.state.t.into(),
             }));
@@ -765,10 +783,14 @@ where
         Ok(())
     }
 
-    pub(crate) fn solve_fail(&mut self, h: Eqn::T) -> Result<(), DiffsolError> {
+    pub(crate) fn solve_fail(
+        &mut self,
+        h: Eqn::T,
+        min_timestep: Eqn::T,
+    ) -> Result<(), DiffsolError> {
         self.statistics.number_of_nonlinear_solver_fails += 1;
         // if step size too small, then fail
-        if abs(h) < Eqn::T::from(Self::MIN_TIMESTEP) {
+        if abs(h) < min_timestep {
             return Err(DiffsolError::from(OdeSolverError::StepSizeTooSmall {
                 time: self.state.t.into(),
             }));
