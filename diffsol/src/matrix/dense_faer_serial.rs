@@ -104,15 +104,26 @@ impl<'a, T: Scalar> MatrixView<'a> for FaerMatRef<'a, T> {
     }
 
     fn gemv_o(&self, alpha: Self::T, x: &Self::V, beta: Self::T, y: &mut Self::V) {
-        y.mul_assign(Scale(beta));
-        matmul(
-            y.data.as_mut(),
-            Accum::Add,
-            self.data.as_ref(),
-            x.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        );
+        if beta == Self::T::zero() {
+            matmul(
+                y.data.as_mut(),
+                Accum::Replace,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        } else {
+            y.mul_assign(Scale(beta));
+            matmul(
+                y.data.as_mut(),
+                Accum::Add,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        }
     }
     fn gemv_v(
         &self,
@@ -121,15 +132,26 @@ impl<'a, T: Scalar> MatrixView<'a> for FaerMatRef<'a, T> {
         beta: Self::T,
         y: &mut Self::V,
     ) {
-        y.mul_assign(Scale(beta));
-        matmul(
-            y.data.as_mut(),
-            Accum::Add,
-            self.data.as_ref(),
-            x.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        );
+        if beta == Self::T::zero() {
+            matmul(
+                y.data.as_mut(),
+                Accum::Replace,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        } else {
+            y.mul_assign(Scale(beta));
+            matmul(
+                y.data.as_mut(),
+                Accum::Add,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        }
     }
 }
 
@@ -145,26 +167,48 @@ impl<'a, T: Scalar> MatrixViewMut<'a> for FaerMatMut<'a, T> {
     }
 
     fn gemm_oo(&mut self, alpha: Self::T, a: &Self::Owned, b: &Self::Owned, beta: Self::T) {
-        self.mul_assign(Scale(beta));
-        matmul(
-            self.data.as_mut(),
-            Accum::Add,
-            a.data.as_ref(),
-            b.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        )
+        if beta == Self::T::zero() {
+            matmul(
+                self.data.as_mut(),
+                Accum::Replace,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        } else {
+            self.mul_assign(Scale(beta));
+            matmul(
+                self.data.as_mut(),
+                Accum::Add,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        }
     }
     fn gemm_vo(&mut self, alpha: Self::T, a: &Self::View, b: &Self::Owned, beta: Self::T) {
-        self.mul_assign(Scale(beta));
-        matmul(
-            self.data.as_mut(),
-            Accum::Add,
-            a.data.as_ref(),
-            b.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        )
+        if beta == Self::T::zero() {
+            matmul(
+                self.data.as_mut(),
+                Accum::Replace,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        } else {
+            self.mul_assign(Scale(beta));
+            matmul(
+                self.data.as_mut(),
+                Accum::Add,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        }
     }
 }
 
@@ -190,15 +234,26 @@ impl<T: Scalar> DenseMatrix for FaerMat<T> {
     }
 
     fn gemm(&mut self, alpha: Self::T, a: &Self, b: &Self, beta: Self::T) {
-        self.data.mul_assign(faer::Scale(beta));
-        matmul(
-            self.data.as_mut(),
-            Accum::Add,
-            a.data.as_ref(),
-            b.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        )
+        if beta == Self::T::zero() {
+            matmul(
+                self.data.as_mut(),
+                Accum::Replace,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        } else {
+            self.data.mul_assign(faer::Scale(beta));
+            matmul(
+                self.data.as_mut(),
+                Accum::Add,
+                a.data.as_ref(),
+                b.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            )
+        }
     }
     fn column_mut(&mut self, i: usize) -> <Self::V as Vector>::ViewMut<'_> {
         let data = self.data.get_mut(0..self.nrows(), i);
@@ -315,15 +370,26 @@ impl<T: Scalar> Matrix for FaerMat<T> {
         })
     }
     fn gemv(&self, alpha: Self::T, x: &Self::V, beta: Self::T, y: &mut Self::V) {
-        y.mul_assign(Scale(beta));
-        matmul(
-            y.data.as_mut(),
-            Accum::Add,
-            self.data.as_ref(),
-            x.data.as_ref(),
-            alpha,
-            get_global_parallelism(),
-        );
+        if beta == Self::T::zero() {
+            matmul(
+                y.data.as_mut(),
+                Accum::Replace,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        } else {
+            y.mul_assign(Scale(beta));
+            matmul(
+                y.data.as_mut(),
+                Accum::Add,
+                self.data.as_ref(),
+                x.data.as_ref(),
+                alpha,
+                get_global_parallelism(),
+            );
+        }
     }
     fn zeros(nrows: IndexType, ncols: IndexType, ctx: Self::C) -> Self {
         let data = Mat::zeros(nrows, ncols);

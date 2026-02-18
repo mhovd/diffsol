@@ -331,10 +331,7 @@ impl<T: Scalar> Matrix for FaerSparseMat<T> {
         }
     }
     fn copy_from(&mut self, other: &Self) {
-        self.data = faer::sparse::SparseColMat::new(
-            other.data.symbolic().to_owned().unwrap(),
-            other.data.val().to_vec(),
-        )
+        self.data.val_mut().copy_from_slice(other.data.val());
     }
     fn from_diagonal(v: &FaerVec<T>) -> Self {
         let dim = v.len();
