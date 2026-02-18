@@ -6,13 +6,13 @@ use crate::{
     NonLinearOpJacobian, Scalar,
 };
 
-use faer::{linalg::solvers::FullPivLu, linalg::solvers::Solve};
+use faer::{linalg::solvers::PartialPivLu, linalg::solvers::Solve};
 /// A [LinearSolver] that uses the LU decomposition in the [`faer`](https://github.com/sarah-ek/faer-rs) library to solve the linear system.
 pub struct LU<T>
 where
     T: Scalar,
 {
-    lu: Option<FullPivLu<T>>,
+    lu: Option<PartialPivLu<T>>,
     matrix: Option<FaerMat<T>>,
 }
 
@@ -37,7 +37,7 @@ impl<T: Scalar> LinearSolver<FaerMat<T>> for LU<T> {
     ) {
         let matrix = self.matrix.as_mut().expect("Matrix not set");
         op.jacobian_inplace(x, t, matrix);
-        self.lu = Some(matrix.data.full_piv_lu());
+        self.lu = Some(matrix.data.partial_piv_lu());
     }
 
     fn solve_in_place(&self, x: &mut FaerVec<T>) -> Result<(), DiffsolError> {

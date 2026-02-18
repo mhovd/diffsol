@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, MulAssign, Sub};
 
 use super::extract_block::CscBlock;
 use super::sparsity::MatrixSparsityRef;
@@ -10,8 +10,10 @@ use crate::{DefaultSolver, FaerSparseLU, IndexType, Scalar, Scale};
 use crate::{FaerContext, FaerVec, FaerVecIndex, Vector, VectorIndex};
 
 use faer::reborrow::{Reborrow, ReborrowMut};
+use faer::sparse::linalg::matmul::sparse_dense_matmul;
 use faer::sparse::ops::{ternary_op_assign_into, union_symbolic};
 use faer::sparse::{Pair, SparseColMat, SymbolicSparseColMat, SymbolicSparseColMatRef, Triplet};
+use faer::{get_global_parallelism, Accum};
 
 #[derive(Clone, Debug)]
 pub struct FaerSparseMat<T: Scalar> {
@@ -301,11 +303,26 @@ impl<T: Scalar> Matrix for FaerSparseMat<T> {
         }
     }
     fn gemv(&self, alpha: Self::T, x: &Self::V, beta: Self::T, y: &mut Self::V) {
-        let tmp = Self::V {
-            data: &self.data * &x.data,
-            context: self.context,
-        };
-        y.axpy(alpha, &tmp, beta);
+        if beta == Self::T::zero() {
+            sparse_dense_matmul(
+                y.data.as_mut().as_mat_mut(),
+                Accum::Replace,
+                self.data.as_ref(),
+                x.data.as_ref().as_mat(),
+                alpha,
+                get_global_parallelism(),
+            );
+        } else {
+            y.mul_assign(Scale(beta));
+            sparse_dense_matmul(
+                y.data.as_mut().as_mat_mut(),
+                Accum::Add,
+                self.data.as_ref(),
+                x.data.as_ref().as_mat(),
+                alpha,
+                get_global_parallelism(),
+            );
+        }
     }
     fn zeros(nrows: IndexType, ncols: IndexType, ctx: Self::C) -> Self {
         Self {
